@@ -1,9 +1,9 @@
-name: Test and Deploy API to Azure
+name: Build, Test and Deploy to Azure Web App
 
 on:
   push:
     branches:
-      - main  # Déclenche le workflow sur un push dans la branche main
+      - main
   pull_request:
     branches:
       - main
@@ -15,11 +15,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          lfs: true  # Ceci force l'installation et le pull de Git LFS
+
+      # (Optionnel) Si l'option "lfs: true" ne suffit pas, ajoutez explicitement ces étapes :
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install git-lfs
+          git lfs install
+          git lfs pull
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10.16'  # Modifiez en fonction de votre version
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -28,17 +38,12 @@ jobs:
 
       - name: Run tests
         run: |
-          # Option 1 : utiliser unittest (assurez-vous que vos tests se trouvent dans un fichier test_*.py)
           python -m unittest discover
-          
-
-      - name: Archive artifact (optionnel)
-        run: zip -r app.zip .
 
       - name: Deploy to Azure Web App
-        if: success()  # Ne se déclenche que si les tests réussissent
+        if: success()
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'YOUR_AZURE_WEBAPP_NAME'   # Remplacez par le nom de votre Web App
+          app-name: 'openclassrooms-projet8-api-segmentation-images-azure'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: './'
+          package: '.'
