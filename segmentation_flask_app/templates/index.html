@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Segmentation d'image - Test</title>
+</head>
+<body>
+  <h1>Interface de segmentation d'image</h1>
+  <form method="post">
+    <label for="image_id">Sélectionnez une image :</label>
+    <select name="image_id" id="image_id">
+      {% for img in image_list %}
+        <option value="{{ img }}" {% if img == selected_image %}selected{% endif %}>{{ img }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Lancer la prédiction</button>
+  </form>
+
+  {% if results %}
+    <h2>Résultats pour l'image {{ results.image_id }}</h2>
+    <div style="display: flex; gap: 20px;">
+      <div>
+        <h3>Image originale</h3>
+        <img src="data:image/png;base64,{{ results.image }}" alt="Image originale" width="256">
+      </div>
+      <div>
+        <h3>Masque réel</h3>
+        {% if results.mask_ground_truth %}
+          <img src="data:image/png;base64,{{ results.mask_ground_truth }}" alt="Masque réel" width="256">
+        {% else %}
+          <p>Masque non disponible</p>
+        {% endif %}
+      </div>
+      <div>
+        <h3>Masque prédit</h3>
+        <img src="data:image/png;base64,{{ results.mask_predicted }}" alt="Masque prédit" width="256">
+      </div>
+    </div>
+  {% endif %}
+</body>
+</html>
