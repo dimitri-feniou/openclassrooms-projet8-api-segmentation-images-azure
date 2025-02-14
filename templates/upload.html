@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Image et Mask</title>
+</head>
+<body>
+  <h1>Upload d'une Image et d'un Masque</h1>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <div>
+      <label for="image">Sélectionnez l'image :</label>
+      <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg">
+    </div>
+    <div>
+      <label for="mask">Sélectionnez le masque :</label>
+      <input type="file" id="mask" name="mask" accept=".png,.jpg,.jpeg">
+    </div>
+    <button type="submit">Uploader</button>
+  </form>
+  <!-- Bouton pour revenir à la page principale -->
+  <p>
+    <a href="/" style="padding: 8px 16px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 4px;">Retour à l'accueil</a>
+  </p>
+</body>
+</html>

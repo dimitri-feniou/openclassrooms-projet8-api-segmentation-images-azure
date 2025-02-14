@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from flask import Flask, request, jsonify, render_template
 import cv2
+from werkzeug.utils import secure_filename
 
 # Importation des fonctions depuis function.py
 from function import (
@@ -16,21 +17,23 @@ from function import (
     image_to_base64
 )
 
-# ✅ Désactiver l'utilisation du GPU pour forcer le CPU
+# Désactiver l'utilisation du GPU pour forcer le CPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-# 📌 Charger le modèle U-Net (ajustez le chemin si besoin)
+# Charger le modèle U-Net (ajustez le chemin si besoin)
 MODEL_PATH = "model/unet_model.h5"
 model = keras.models.load_model(MODEL_PATH, compile=False)
 
-# 📌 Définition de l'application Flask
+# Définition de l'application Flask
 app = Flask(__name__)
 
-# 📌 Dossiers de données
+# Dossiers de données
 IMAGE_DIR = "data/images"         # Images d'entrée
 MASK_DIR = "data/masks"           # Masques réels associés
 PREDICTION_DIR = "data/predictions"  # Pour sauvegarder les résultats
 os.makedirs(PREDICTION_DIR, exist_ok=True)
+os.makedirs(IMAGE_DIR, exist_ok=True)
+os.makedirs(MASK_DIR, exist_ok=True)
 
 @app.route("/images", methods=["GET"])
 def list_images():
@@ -96,6 +99,36 @@ def predict(image_id):
         "real_mask_file": real_mask_save_path
     })
 
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if request.method == "POST":
+        # Récupérer les fichiers envoyés via le formulaire
+        image_file = request.files.get("image")
+        mask_file = request.files.get("mask")
+        messages = {}
+
+        if image_file:
+            # Sécuriser le nom du fichier et enregistrer dans IMAGE_DIR
+            image_filename = secure_filename(image_file.filename)
+            image_path = os.path.join(IMAGE_DIR, image_filename)
+            image_file.save(image_path)
+            messages["image"] = f"Image uploaded as {image_filename}"
+        else:
+            messages["image"] = "No image file uploaded"
+
+        if mask_file:
+            mask_filename = secure_filename(mask_file.filename)
+            mask_path = os.path.join(MASK_DIR, mask_filename)
+            mask_file.save(mask_path)
+            messages["mask"] = f"Mask uploaded as {mask_filename}"
+        else:
+            messages["mask"] = "No mask file uploaded"
+
+        return jsonify(messages)
+    else:
+        # Pour GET, afficher un formulaire d'upload
+        return render_template("upload.html")
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     image_list = get_image_list(IMAGE_DIR)
@@ -113,4 +146,4 @@ def index():
     return render_template("index.html", image_list=image_list, results=results, selected_image=selected_image)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=80)
